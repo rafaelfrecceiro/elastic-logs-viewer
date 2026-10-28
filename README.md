@@ -9,6 +9,20 @@ A busca vai pelo `/api/console/proxy` do próprio Kibana, então basta a URL que
 2. `npm start` (ou `node server.js`) — Node 20.12+, sem dependências.
 3. Abra http://localhost:4600.
 
+## Rodar em container (sempre no ar)
+
+Na pasta com o `.env` preenchido:
+
+```bash
+docker build -t elastic-logs-viewer .
+docker run -d --name elastic-logs-viewer --restart unless-stopped --env-file .env -e HOST=0.0.0.0 -p 4600:4600 elastic-logs-viewer
+```
+
+`--restart unless-stopped` religa o container quando a máquina/docker reinicia (o serviço docker precisa estar
+habilitado no boot). Atualizar: `docker build` de novo, `docker rm -f elastic-logs-viewer` e o mesmo `docker run`.
+
+Exposto na rede, deixe `ALLOWED_HOSTS` restrito: o servidor só manda o login do Kibana para esses hosts.
+
 ## Uso
 
 - **URL**: qualquer forma serve — `cliente.weon.com.br`, `https://cliente.weon.com.br/kibana` ou um link copiado de uma tela
@@ -25,4 +39,4 @@ A busca vai pelo `/api/console/proxy` do próprio Kibana, então basta a URL que
   Duplo clique numa palavra (hashid, protocolo, telefone) adiciona ao filtro.
 - A busca fica no `#` da URL da página — dá para favoritar.
 
-Só escuta em `127.0.0.1`; a senha fica no `.env` e nunca vai para o navegador.
+Por padrão só escuta em `127.0.0.1` (`HOST` no `.env`); a senha fica no `.env` e nunca vai para o navegador.

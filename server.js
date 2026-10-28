@@ -1,6 +1,6 @@
 // Logs Kibana — visor de logs dos clientes pelo Kibana de cada ambiente.
 // Consulta o Elasticsearch através de /api/console/proxy do Kibana (mesmo login da tela).
-// Rodar: npm start  (ou node server.js)  → http://localhost:4600
+// Rodar: node ferramentas/logs-kibana/server.js  → http://localhost:4600
 
 const http = require('http');
 const fs = require('fs');
@@ -12,6 +12,9 @@ const PORT = Number(process.env.PORT || 4600);
 const USER = process.env.KIBANA_USER || '';
 const PASS = process.env.KIBANA_PASS || '';
 const INDEX = process.env.KIBANA_INDEX || 'dockers-*';
+const HOST = process.env.HOST || '127.0.0.1';
+// Só manda o login para estes hosts (vírgula; "*.dominio" vale para subdomínios). Vazio = qualquer um.
+const ALLOWED = (process.env.ALLOWED_HOSTS ?? '*.weon.com.br').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 if (process.env.KIBANA_INSECURE === '1') process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const AUTH = 'Basic ' + Buffer.from(`${USER}:${PASS}`).toString('base64');
@@ -23,6 +26,9 @@ async function resolveBase(raw) {
   if (!url) throw new Error('Informe a URL do cliente');
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
   const u = new URL(url);
+  const host = u.hostname.toLowerCase();
+  const allowed = !ALLOWED.length || ALLOWED.some(a => a.startsWith('*.') ? host.endsWith(a.slice(1)) || host === a.slice(2) : host === a);
+  if (!allowed) throw new Error(`Host ${host} fora da lista permitida (${ALLOWED.join(', ')})`);
   let p = u.pathname;
   const cut = p.search(/\/(app|api|s\/[^/]+\/app)\//);
   if (cut >= 0) p = p.slice(0, cut);
@@ -162,5 +168,5 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-if (!USER || !PASS) console.warn('⚠ KIBANA_USER/KIBANA_PASS vazios — preencha o .env');
-server.listen(PORT, '127.0.0.1', () => console.log(`Logs Kibana em http://localhost:${PORT}  (índice padrão ${INDEX})`));
+if (!USER || !PASS) console.warn('⚠ KIBANA_USER/KIBANA_PASS vazios — preencha ferramentas/logs-kibana/.env');
+server.listen(PORT, HOST, () => console.log(`Logs Kibana em http://${HOST}:${PORT}  (índice padrão ${INDEX}; hosts: ${ALLOWED.join(', ') || 'qualquer'})`));
