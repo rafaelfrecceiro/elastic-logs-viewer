@@ -1,0 +1,14 @@
+{
+  "name": "elastic-logs-viewer",
+  "version": "1.0.0",
+  "description": "Visor de logs de containers pelo Kibana de cada cliente (Elasticsearch 7.x via /api/console/proxy)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}
